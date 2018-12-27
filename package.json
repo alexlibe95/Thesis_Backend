@@ -1,0 +1,19 @@
+{
+    "name": "Thesis-Backend",
+    "version": "1.0.0",
+    "description": "Thesis-Backend",
+    "license": "MIT",
+    "scripts": {
+        "start": "nodemon ./server.js"
+    },
+    "dependencies": {
+        "body-parser": "^1.18.3",
+        "cors": "^2.8.4",
+        "express": "^4.16.3",
+        "mariadb": "^2.0.2-rc",
+        "rootpath": "^0.1.2"
+    },
+    "devDependencies": {
+        "nodemon": "^1.17.5"
+    }
+}
