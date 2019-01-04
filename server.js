@@ -27,6 +27,21 @@ const pool  = mariadb.createPool({
   connectionLimit: 5
 });
 
+async function getusers(){
+
+  try {
+      var result = await pool.query('SELECT * FROM users')
+      return result;
+
+  } catch(err) {
+      throw new Error(err)
+  }
+
+            // Do something with result.
+  }
+
+
+module.exports.getusers = getusers;
 
 // use basic HTTP auth to secure the api
 app.use(basicAuth);
@@ -36,6 +51,7 @@ app.use('/users', require('./users/users.controller'));
 
 // global error handler
 app.use(errorHandler);
+
 
 
 app.use('/all', function(req, res, next) {
