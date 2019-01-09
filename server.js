@@ -27,24 +27,41 @@ const pool  = mariadb.createPool({
   connectionLimit: 5
 });
 
-async function getusers(){
-
-  try {
-      var result = await pool.query('SELECT * FROM users')
-      return result;
-
-  } catch(err) {
-      throw new Error(err)
-  }
-
-            // Do something with result.
-  }
 
 
-module.exports.getusers = getusers;
+
+  app.post('/auth', async function(request, response, next) {
+
+  	var username = request.body.username;
+  	var password = request.body.password;
+  	if (username && password) {
+
+      try {
+  		var results = await pool.query("SELECT * FROM users where username='"+username+"' and password='"+password+"'")
+        console.log("ton pairneis");
+  			if (results.length > 0) {
+          const { password, ...userWithoutPassword } = results[0];
+  				response.json(userWithoutPassword);
+  			} else {
+  				response.status(400).json({ message: 'Username or password is incorrect' })
+  			}
+  			response.end();
+
+    } catch(err) {
+        throw new Error(err)
+    }
+  	} else {
+
+      response.status(400).json({ message: 'Please enter Username and Password!' })
+  		response.end();
+  	}
+
+
+  });
+
 
 // use basic HTTP auth to secure the api
-app.use(basicAuth);
+//app.use(basicAuth);
 
 // api routes
 app.use('/users', require('./users/users.controller'));

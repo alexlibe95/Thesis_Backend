@@ -1,5 +1,4 @@
 ﻿// users hardcoded for simplicity, store in a db for production applications
-const getuser = require("../server");
 
 
 
@@ -15,11 +14,7 @@ module.exports = {
 };
 
 async function authenticate({ username, password }) {
-        let us = getuser.getusers();
-        us.then(function(results){
-          console.log(results[1])
-
-        })
+      
         const user = users.find(u => u.username === username && u.password === password);
         if(user) {
             const { password, ...userWithoutPassword } = user;
