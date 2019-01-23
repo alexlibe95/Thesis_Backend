@@ -59,6 +59,33 @@ const pool  = mariadb.createPool({
 
   });
 
+  app.post('/getScholars', async function(request, response, next) {
+
+  	var username = request.body.username;
+
+  	if (username ) {
+
+      try {
+  		var results = await pool.query("SELECT * FROM Scholars where username='"+username+"'")
+        console.log(results);
+  			if (results.length > 0) {
+          response.send(results);
+  			} else {
+  				response.status(400).json({ message: 'No Scolars' })
+  			}
+  			response.end();
+
+    } catch(err) {
+        throw new Error(err)
+    }
+  	} else {
+
+      response.status(400).json({ message: 'Something went wrong' })
+  		response.end();
+  	}
+
+
+  });
 
 // use basic HTTP auth to secure the api
 //app.use(basicAuth);
