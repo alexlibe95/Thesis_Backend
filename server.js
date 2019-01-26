@@ -30,7 +30,7 @@ const pool  = mariadb.createPool({
 
 
 
-  app.post('/auth', async function(request, response, next) {
+app.post('/auth', async function(request, response, next) {
 
   	var username = request.body.username;
   	var password = request.body.password;
@@ -57,9 +57,9 @@ const pool  = mariadb.createPool({
   	}
 
 
-  });
+});
 
-  app.post('/getScholars', async function(request, response, next) {
+app.post('/getScholars', async function(request, response, next) {
 
   	var username = request.body.username;
 
@@ -71,7 +71,7 @@ const pool  = mariadb.createPool({
   			if (results.length > 0) {
           response.send(results);
   			} else {
-  				response.status(400).json({ message: 'No Scolars' })
+  				response.status(400).json({ message: 'No Scholars' })
   			}
   			response.end();
 
@@ -85,7 +85,77 @@ const pool  = mariadb.createPool({
   	}
 
 
-  });
+});
+
+app.post('/addScholar', async function(request, response, next) {
+
+    	var title = request.body.title;
+      var sector = request.body.sector;
+      var level = request.body.level;
+      var description = request.body.description;
+      var username = request.body.username;
+
+
+        try {
+    		var results = await pool.query("INSERT INTO Scholars (name, tomeas, epipedo, Description, Username) VALUES ('"+title+"','"+sector+"','"+level+"','"+description+"','"+username+"')")
+    			if (results.affectedRows > 0) {
+            response.status(201).json({ message: 'successful' })
+    			} else {
+    				response.status(400).json({ message: 'unsuccessful' })
+    			}
+    			response.end();
+
+        } catch(err) {
+            throw new Error(err)
+        }
+
+});
+
+app.post('/editScholar', async function(request, response, next) {
+
+      var scholarID = request.body.ScholarID;
+    	var title = request.body.title;
+      var sector = request.body.sector;
+      var level = request.body.level;
+      var description = request.body.description;
+
+
+
+        try {
+    		var results = await pool.query("UPDATE Scholars SET name='"+title+"', tomeas='"+sector+"', epipedo='"+level+"', Description='"+description+"'  WHERE idScholars='"+scholarID+"'")
+        
+    			if (results.affectedRows > 0) {
+            response.status(201).json({ message: 'successful' })
+    			} else {
+    				response.status(400).json({ message: 'unsuccessful' })
+    			}
+    			response.end();
+
+        } catch(err) {
+            throw new Error(err)
+        }
+
+});
+
+app.post('/removeScholar', async function(request, response, next) {
+
+
+
+
+        try {
+    		var results = await pool.query("DELETE FROM Scholars WHERE idScholars='"+scholarID+"'")
+    			if (results.affectedRows > 0) {
+            response.status(201).json({ message: 'successful' })
+    			} else {
+    				response.status(400).json({ message: 'unsuccessful' })
+    			}
+    			response.end();
+
+        } catch(err) {
+            throw new Error(err)
+        }
+
+});
 
 // use basic HTTP auth to secure the api
 //app.use(basicAuth);
