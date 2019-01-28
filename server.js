@@ -92,12 +92,19 @@ app.post('/addScholar', async function(request, response, next) {
     	var title = request.body.title;
       var sector = request.body.sector;
       var level = request.body.level;
-      var description = request.body.description;
+      var euro = request.body.euro;
+      var origin = request.body.origin;
+      var duration = request.body.duration;
+      var age_from = request.body.age_from;
+      var age_until = request.body.age_until;
+      var indigent = request.body.indigent;
+      var comment = request.body.comment;
+      var date_expire = request.body.date_expire;
       var username = request.body.username;
 
 
         try {
-    		var results = await pool.query("INSERT INTO Scholars (name, tomeas, epipedo, Description, Username) VALUES ('"+title+"','"+sector+"','"+level+"','"+description+"','"+username+"')")
+    		var results = await pool.query("INSERT INTO Scholars (title, sector, level, euro, origin, duration, age_from, age_until, indigent, comment, date_expire, username) VALUES ('"+title+"','"+sector+"','"+level+"','"+euro+"','"+origin+"','"+duration+"','"+age_from+"','"+age_until+"','"+indigent+"','"+comment+"','"+date_expire+"','"+username+"')")
     			if (results.affectedRows > 0) {
             response.status(201).json({ message: 'successful' })
     			} else {
@@ -114,16 +121,23 @@ app.post('/addScholar', async function(request, response, next) {
 app.post('/editScholar', async function(request, response, next) {
 
       var scholarID = request.body.ScholarID;
-    	var title = request.body.title;
+      var title = request.body.title;
       var sector = request.body.sector;
       var level = request.body.level;
-      var description = request.body.description;
+      var euro = request.body.euro;
+      var origin = request.body.origin;
+      var duration = request.body.duration;
+      var age_from = request.body.age_from;
+      var age_until = request.body.age_until;
+      var indigent = request.body.indigent;
+      var comment = request.body.comment;
+      var date_expire = request.body.date_expire;
 
 
 
         try {
-    		var results = await pool.query("UPDATE Scholars SET name='"+title+"', tomeas='"+sector+"', epipedo='"+level+"', Description='"+description+"'  WHERE idScholars='"+scholarID+"'")
-        
+    		var results = await pool.query("UPDATE Scholars SET title='"+title+"', sector='"+sector+"', level='"+level+"', euro='"+euro+"', origin='"+origin+"', duration='"+duration+"', age_from='"+age_from+"', age_until='"+age_until+"', indigent='"+indigent+"', comment='"+comment+"', date_expire='"+date_expire+"'  WHERE id='"+scholarID+"'")
+
     			if (results.affectedRows > 0) {
             response.status(201).json({ message: 'successful' })
     			} else {
@@ -139,11 +153,11 @@ app.post('/editScholar', async function(request, response, next) {
 
 app.post('/removeScholar', async function(request, response, next) {
 
-
+        var scholarID = request.body.ScholarID;
 
 
         try {
-    		var results = await pool.query("DELETE FROM Scholars WHERE idScholars='"+scholarID+"'")
+    		var results = await pool.query("DELETE FROM Scholars WHERE id='"+scholarID+"'")
     			if (results.affectedRows > 0) {
             response.status(201).json({ message: 'successful' })
     			} else {
