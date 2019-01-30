@@ -38,10 +38,13 @@ app.post('/auth', async function(request, response, next) {
 
       try {
   		var results = await pool.query("SELECT * FROM users where username='"+username+"' and password='"+password+"'")
-        console.log("ton pairneis");
   			if (results.length > 0) {
+          if(results[0].Activated){
           const { password, ...userWithoutPassword } = results[0];
   				response.json(userWithoutPassword);
+        }else{
+          response.status(400).json({ message: 'Your profile has not been Activated yet!' })
+        }
   			} else {
   				response.status(400).json({ message: 'Username or password is incorrect' })
   			}
@@ -55,8 +58,36 @@ app.post('/auth', async function(request, response, next) {
       response.status(400).json({ message: 'Please enter Username and Password!' })
   		response.end();
   	}
+});
 
+app.post('/register', async function(request, response, next) {
 
+    var instName = request.body.instName;
+    var instLink = request.body.instLink;
+    var firstName = request.body.firstName;
+    var lastName = request.body.lastName;
+  	var username = request.body.username;
+  	var password = request.body.password;
+
+  	if ( instName && instLink && firstName && lastName && username && password) {
+
+      try {
+  		var results = await pool.query("INSERT INTO users (username, password, firstName, lastName, instName, instLink) VALUES ('"+username+"','"+password+"','"+firstName+"','"+lastName+"','"+instName+"','"+instLink+"')")
+  			if (results.affectedRows > 0) {
+          response.status(201).json({ message: 'Successful registration' })
+  			} else {
+  				response.status(400).json({ message: 'Username or password is incorrect' })
+  			}
+  			response.end();
+
+    } catch(err) {
+        throw new Error(err)
+    }
+  	} else {
+
+      response.status(400).json({ message: 'Please fill the form!' })
+  		response.end();
+  	}
 });
 
 app.post('/getScholars', async function(request, response, next) {
@@ -206,7 +237,6 @@ app.use('/all', function(req, res, next) {
 });
 
 app.use('/:id', function(req, res, next) {
-  console.log('Request Url: 192.168.1.g13:4000'+req.url);
   let conn;
   pool.getConnection()
   .then(conn =>{
