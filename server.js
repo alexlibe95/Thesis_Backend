@@ -33,14 +33,14 @@ const pool  = mariadb.createPool({
 app.post('/auth', async function(request, response, next) {
 
   	var username = request.body.username;
-  	var password = request.body.password;
-  	if (username && password) {
+  	var passwordHash = request.body.password;
+  	if (username && passwordHash) {
 
       try {
-  		var results = await pool.query("SELECT * FROM users where username='"+username+"' and password='"+password+"'")
+  		var results = await pool.query("SELECT * FROM users where username='"+username+"' and password='"+passwordHash+"'")
   			if (results.length > 0) {
           if(results[0].Activated){
-          const { password, ...userWithoutPassword } = results[0];
+          const { passwordHash, ...userWithoutPassword } = results[0];
   				response.json(userWithoutPassword);
         }else{
           response.status(400).json({ message: 'Your profile has not been Activated yet!' })
@@ -60,6 +60,33 @@ app.post('/auth', async function(request, response, next) {
   	}
 });
 
+app.post('/salt', async function(request, response, next) {
+
+  	var username = request.body.username;
+
+  	if (username ) {
+
+      try {
+  		var results = await pool.query("SELECT salt FROM users where username='"+username+"'")
+  			if (results.length > 0) {
+          response.send(results);
+  			} else {
+  				response.status(400).json({ message: 'Invalid Username' })
+  			}
+  			response.end();
+
+    } catch(err) {
+        throw new Error(err)
+    }
+  	} else {
+
+      response.status(400).json({ message: 'Something went wrong' })
+  		response.end();
+  	}
+
+
+});
+
 app.post('/register', async function(request, response, next) {
 
     var instName = request.body.instName;
@@ -67,12 +94,13 @@ app.post('/register', async function(request, response, next) {
     var firstName = request.body.firstName;
     var lastName = request.body.lastName;
   	var username = request.body.username;
-  	var password = request.body.password;
+  	var passwordHash = request.body.passwordHash;
+    var salt = request.body.salt;
 
-  	if ( instName && instLink && firstName && lastName && username && password) {
+  	if ( instName && instLink && firstName && lastName && username && passwordHash && salt) {
 
       try {
-  		var results = await pool.query("INSERT INTO users (username, password, firstName, lastName, instName, instLink) VALUES ('"+username+"','"+password+"','"+firstName+"','"+lastName+"','"+instName+"','"+instLink+"')")
+  		var results = await pool.query("INSERT INTO users (username, password, firstName, lastName, instName, instLink, salt) VALUES ('"+username+"','"+passwordHash+"','"+firstName+"','"+lastName+"','"+instName+"','"+instLink+"','"+salt+"')")
   			if (results.affectedRows > 0) {
           response.status(201).json({ message: 'Successful registration' })
   			} else {
@@ -234,29 +262,6 @@ app.use('/all', function(req, res, next) {
   .catch(err=>{
 
   });
-});
-
-app.use('/:id', function(req, res, next) {
-  let conn;
-  pool.getConnection()
-  .then(conn =>{
-    conn.query("SELECT * from Scholars where id="+req.params.id)
-    .then((rows)=>{
-      console.log(rows);
-      res.send(rows);
-    })
-    .then((res)=>{
-      console.log(res);
-      conn.end();
-    })
-    .catch(err=>{
-      conn.end();
-    })
-  })
-  .catch(err=>{
-
-  });
-
 });
 
 // start server
