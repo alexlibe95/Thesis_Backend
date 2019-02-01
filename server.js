@@ -97,20 +97,35 @@ app.post('/register', async function(request, response, next) {
   	var passwordHash = request.body.passwordHash;
     var salt = request.body.salt;
 
+
   	if ( instName && instLink && firstName && lastName && username && passwordHash && salt) {
 
-      try {
-  		var results = await pool.query("INSERT INTO users (username, password, firstName, lastName, instName, instLink, salt) VALUES ('"+username+"','"+passwordHash+"','"+firstName+"','"+lastName+"','"+instName+"','"+instLink+"','"+salt+"')")
-  			if (results.affectedRows > 0) {
-          response.status(201).json({ message: 'Successful registration' })
-  			} else {
-  				response.status(400).json({ message: 'Username or password is incorrect' })
-  			}
-  			response.end();
+        try{
+      		var results = await pool.query("SELECT * FROM users where username='"+username+"'")
+      			if (results.length > 0) {
+              response.status(400).json({ message: 'This Username has already account' })
+      			} else {
+                try {
+                var results = await pool.query("INSERT INTO users (username, password, firstName, lastName, instName, instLink, salt) VALUES ('"+username+"','"+passwordHash+"','"+firstName+"','"+lastName+"','"+instName+"','"+instLink+"','"+salt+"')")
+                  if (results.affectedRows > 0) {
+                    response.status(201).json({ message: 'Successful registration' })
+                  } else {
+                    response.status(400).json({ message: 'Username or password is incorrect' })
+                  }
+                  response.end();
 
-    } catch(err) {
-        throw new Error(err)
-    }
+                } catch(err) {
+                  throw new Error(err)
+                }
+
+      			}
+      			response.end();
+
+        }catch(err) {
+            throw new Error(err)
+        }
+
+
   	} else {
 
       response.status(400).json({ message: 'Please fill the form!' })
