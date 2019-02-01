@@ -33,7 +33,7 @@ const pool  = mariadb.createPool({
 app.post('/auth', async function(request, response, next) {
 
   	var username = request.body.username;
-  	var passwordHash = request.body.password;
+  	var passwordHash = request.body.passwordHash;
   	if (username && passwordHash) {
 
       try {
@@ -72,6 +72,36 @@ app.post('/salt', async function(request, response, next) {
           response.send(results);
   			} else {
   				response.status(400).json({ message: 'Invalid Username' })
+  			}
+  			response.end();
+
+    } catch(err) {
+        throw new Error(err)
+    }
+  	} else {
+
+      response.status(400).json({ message: 'Something went wrong' })
+  		response.end();
+  	}
+
+
+});
+
+app.post('/changepass', async function(request, response, next) {
+
+  	var username = request.body.username;
+    var passwordHash = request.body.passwordHash;
+    var salt = request.body.salt;
+
+
+  	if (username && passwordHash && salt) {
+
+      try {
+  		var results = await pool.query("UPDATE users SET password='"+passwordHash+"', salt='"+salt+"'WHERE username='"+username+"'")
+  			if (results.affectedRows > 0) {
+          response.send(results);
+  			} else {
+  				response.status(400).json({ message: 'Could not update Password' })
   			}
   			response.end();
 
