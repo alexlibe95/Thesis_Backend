@@ -244,7 +244,6 @@ app.post('/editScholar', async function(request, response, next) {
       var date_expire = request.body.date_expire;
 
 
-
         try {
     		var results = await pool.query("UPDATE Scholars SET title='"+title+"', sector='"+sector+"', level='"+level+"', euro='"+euro+"', origin='"+origin+"', duration='"+duration+"', age_from='"+age_from+"', age_until='"+age_until+"', indigent='"+indigent+"', comment='"+comment+"', date_expire='"+date_expire+"'  WHERE id='"+scholarID+"'")
 
@@ -322,10 +321,63 @@ app.post('/getScholars', async function(request, response, next) {
     var indigent = request.body.indigent;
     var active = request.body.active;
 
+    if(indigent && active){
+      indigent=1;
+      active=1;
+    }else if(indigent && !active){
+      indigent=1;
+      active=0;
+    }else if(!indigent && !active){
+      indigent=0;
+      active=0;
+    }else{
+      indigent=0;
+      active=1;
+    }
+
+    var list1=[];
+    list1[0]=sector;
+    list1[1]=level;
+    list1[2]=origin;
+    list1[3]=euro;
+    list1[4]=age;
+
+    var list2=[];
+    list2[0]="sector=";
+    list2[1]="level=";
+    list2[2]="origin=";
+
+
+
+    var expression="SELECT * FROM Scholars where ";
+    console.log(expression)
+    for(var i=0; i<3; i++){
+      if(list1[i]!="all"){
+        expression=expression+list2[i]+'"'+list1[i]+'" and ';
+      }
+    }
+    if(list1[3]!="all"){
+      if(list1[3]=="0"){
+        expression=expression+'euro>"0" and euro<"501" and ';
+      }else if(list1[3]=="500"){
+        expression=expression+'euro>"500" and euro<"1501" and ';
+      }else if(list1[3]=="1500"){
+        expression=expression+'euro>"1500" and euro<"3001" and ';
+      }else{
+        expression=expression+'euro>"3000" and ';
+      }
+    }
+
+    if(list1[4]!=""){
+      expression=expression+"age_from<"+'"'+age+'" and age_until>'+'"'+age+'" and ';
+    }
+    expression=expression+"indigent="+'"'+indigent+'"';
+    console.log(expression)
+
   	if (sector) {
 
       try {
-  		var results = await pool.query("SELECT * FROM Scholars where sector='"+sector+"'")
+  		var results = await pool.query(expression)
         console.log(results);
   			if (results.length > 0) {
           response.send(results);
@@ -333,12 +385,10 @@ app.post('/getScholars', async function(request, response, next) {
   				response.status(400).json({ message: 'No Scholars' })
   			}
   			response.end();
-
     } catch(err) {
         throw new Error(err)
     }
   	} else {
-
       response.status(400).json({ message: 'Something went wrong' })
   		response.end();
   	}
