@@ -372,6 +372,11 @@ app.post('/getScholars', async function(request, response, next) {
       expression=expression+"age_from<"+'"'+age+'" and age_until>'+'"'+age+'" and ';
     }
     expression=expression+"indigent="+'"'+indigent+'"';
+
+    if(active){
+      expression=expression+"and date_expire>CURDATE()"
+    }
+
     console.log(expression)
 
   	if (sector) {
