@@ -120,7 +120,7 @@ app.post('/changepass', async function(request, response, next) {
 app.post('/register', async function(request, response, next) {
 
     var instName = request.body.instName;
-    var instLink = request.body.instLink;
+    var instLink = "https://"+request.body.instLink;
     var firstName = request.body.firstName;
     var lastName = request.body.lastName;
   	var username = request.body.username;
@@ -288,6 +288,28 @@ app.use('/users', require('./users/users.controller'));
 
 // global error handler
 app.use(errorHandler);
+
+app.use('/getInstitutes', function(req, res, next) {
+  let conn;
+  pool.getConnection()
+  .then(conn =>{
+    conn.query('SELECT instName, instLink from users WHERE Activated="1"')
+    .then((rows)=>{
+      console.log(rows);
+      res.send(rows);
+    })
+    .then((res)=>{
+      console.log(res);
+      conn.end();
+    })
+    .catch(err=>{
+      conn.end();
+    })
+  })
+  .catch(err=>{
+
+  });
+});
 
 app.use('/getAllScholars', function(req, res, next) {
   let conn;
