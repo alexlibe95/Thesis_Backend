@@ -7,6 +7,8 @@ const bodyParser = require('body-parser');
 const basicAuth = require('_helpers/basic-auth');
 const errorHandler = require('_helpers/error-handler');
 
+var nodemailer = require('nodemailer');
+
 app.use(bodyParser.json());
 app.use(cors());
 app.use(bodyParser.urlencoded({
@@ -17,6 +19,16 @@ app.use(function(req, res, next){
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   next();
 })
+
+
+var transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'alexlibe95@gmail.com',
+    pass: ''
+  }
+});
+
 
 
 const pool  = mariadb.createPool({
@@ -139,6 +151,21 @@ app.post('/register', async function(request, response, next) {
                 var results = await pool.query("INSERT INTO users (username, password, firstName, lastName, instName, instLink, salt) VALUES ('"+username+"','"+passwordHash+"','"+firstName+"','"+lastName+"','"+instName+"','"+instLink+"','"+salt+"')")
                   if (results.affectedRows > 0) {
                     response.status(201).json({ message: 'Successful registration' })
+
+                    var mailOptions = {
+
+                      to: 'alexlibe@studyingreece.edu.gr',
+                      subject: 'New Registration',
+                      text: instName
+                    };
+
+                    transporter.sendMail(mailOptions, function(error, info){
+                          if (error) {
+                            console.log(error);
+                          } else {
+                            console.log('Email sent: ' + info.response);
+                          }
+                        });
                   } else {
                     response.status(400).json({ message: 'Username or password is incorrect' })
                   }
