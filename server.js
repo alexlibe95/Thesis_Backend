@@ -163,7 +163,7 @@ app.post('/register', async function(request, response, next) {
   	}
 });
 
-app.post('/getScholars', async function(request, response, next) {
+app.post('/getProfScholars', async function(request, response, next) {
 
   	var username = request.body.username;
 
@@ -204,11 +204,17 @@ app.post('/addScholar', async function(request, response, next) {
       var indigent = request.body.indigent;
       var comment = request.body.comment;
       var date_expire = request.body.date_expire;
+      var link = request.body.link;
       var username = request.body.username;
 
+      if(indigent){
+        indigent="1";
+      }else{
+        indigent="0";
+      }
 
         try {
-    		var results = await pool.query("INSERT INTO Scholars (title, sector, level, euro, origin, duration, age_from, age_until, indigent, comment, date_expire, username) VALUES ('"+title+"','"+sector+"','"+level+"','"+euro+"','"+origin+"','"+duration+"','"+age_from+"','"+age_until+"','"+indigent+"','"+comment+"','"+date_expire+"','"+username+"')")
+    		var results = await pool.query("INSERT INTO Scholars (title, sector, level, euro, origin, duration, age_from, age_until, indigent, comment, date_expire, link, username) VALUES ('"+title+"','"+sector+"','"+level+"','"+euro+"','"+origin+"','"+duration+"','"+age_from+"','"+age_until+"','"+indigent+"','"+comment+"','"+date_expire+"','"+link+"','"+username+"')")
     			if (results.affectedRows > 0) {
             response.status(201).json({ message: 'successful' })
     			} else {
@@ -284,10 +290,7 @@ app.use('/users', require('./users/users.controller'));
 // global error handler
 app.use(errorHandler);
 
-
-
-app.use('/all', function(req, res, next) {
-  console.log('Request Url: 192.168.1.3:4000'+req.url);
+app.use('/getAllScholars', function(req, res, next) {
   let conn;
   pool.getConnection()
   .then(conn =>{
@@ -308,6 +311,41 @@ app.use('/all', function(req, res, next) {
 
   });
 });
+
+app.post('/getScholars', async function(request, response, next) {
+
+  	var sector = request.body.sector;
+    var level = request.body.level;
+    var euro = request.body.euro;
+    var origin = request.body.origin;
+    var age = request.body.age;
+    var indigent = request.body.indigent;
+    var active = request.body.active;
+
+  	if (sector) {
+
+      try {
+  		var results = await pool.query("SELECT * FROM Scholars where sector='"+sector+"'")
+        console.log(results);
+  			if (results.length > 0) {
+          response.send(results);
+  			} else {
+  				response.status(400).json({ message: 'No Scholars' })
+  			}
+  			response.end();
+
+    } catch(err) {
+        throw new Error(err)
+    }
+  	} else {
+
+      response.status(400).json({ message: 'Something went wrong' })
+  		response.end();
+  	}
+
+
+});
+
 
 // start server
 const port = process.env.NODE_ENV === 'production' ? 80 : 4000;
