@@ -198,7 +198,6 @@ app.post('/getProfScholars', async function(request, response, next) {
 
       try {
   		var results = await pool.query("SELECT * FROM Scholars where username='"+username+"'")
-        console.log(results);
   			if (results.length > 0) {
           response.send(results);
   			} else {
@@ -233,6 +232,8 @@ app.post('/addScholar', async function(request, response, next) {
       var date_expire = request.body.date_expire;
       var link = request.body.link;
       var username = request.body.username;
+
+      link="https://" + link
 
       if(indigent){
         indigent="1";
@@ -307,6 +308,51 @@ app.post('/removeScholar', async function(request, response, next) {
 
 });
 
+app.post('/newsletter', async function(request, response, next) {
+
+      var username = request.body.username;
+      var email = request.body.email;
+
+        try {
+    		var results = await pool.query("INSERT INTO Newsletter (name, email) VALUES ('"+username+"','"+email+"')")
+    			if (results.affectedRows > 0) {
+            response.status(201).json({ message: 'successful' })
+    			} else {
+    				response.status(400).json({ message: 'unsuccessful' })
+    			}
+    			response.end();
+
+        } catch(err) {
+            throw new Error(err)
+        }
+
+});
+
+app.post('/sendEmail', async function(request, response, next) {
+
+      var username = request.body.username;
+      var email = request.body.email;
+      var subject = request.body.subject;
+      var text = request.body.text;
+      console.log(username + email + subject +text)
+
+      var mailOptions = {
+        to: 'alexlibe@studyingreece.edu.gr',
+        subject: email +"/"+subject,
+        text: text
+      };
+
+      transporter.sendMail(mailOptions, function(error, info){
+            if (error) {
+              console.log(error);
+              response.status(400).json({ message: 'unsuccessful' })
+            } else {
+              console.log('Email sent: ' + info.response);
+              response.status(201).json({ message: 'successful' })
+            }
+          });
+
+});
 // use basic HTTP auth to secure the api
 //app.use(basicAuth);
 
@@ -322,11 +368,9 @@ app.use('/getInstitutes', function(req, res, next) {
   .then(conn =>{
     conn.query('SELECT instName, instLink from users WHERE Activated="1"')
     .then((rows)=>{
-      console.log(rows);
       res.send(rows);
     })
     .then((res)=>{
-      console.log(res);
       conn.end();
     })
     .catch(err=>{
@@ -344,11 +388,9 @@ app.use('/getAllScholars', function(req, res, next) {
   .then(conn =>{
     conn.query("SELECT * from Scholars")
     .then((rows)=>{
-      console.log(rows);
       res.send(rows);
     })
     .then((res)=>{
-      console.log(res);
       conn.end();
     })
     .catch(err=>{
@@ -399,7 +441,7 @@ app.post('/getScholars', async function(request, response, next) {
 
 
     var expression="SELECT * FROM Scholars where ";
-    console.log(expression)
+
     for(var i=0; i<3; i++){
       if(list1[i]!="all"){
         expression=expression+list2[i]+'"'+list1[i]+'" and ';
@@ -426,13 +468,10 @@ app.post('/getScholars', async function(request, response, next) {
       expression=expression+"and date_expire>CURDATE()"
     }
 
-    console.log(expression)
-
   	if (sector) {
 
       try {
   		var results = await pool.query(expression)
-        console.log(results);
   			if (results.length > 0) {
           response.send(results);
   			} else {
