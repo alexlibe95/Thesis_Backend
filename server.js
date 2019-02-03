@@ -269,6 +269,12 @@ app.post('/editScholar', async function(request, response, next) {
       var comment = request.body.comment;
       var date_expire = request.body.date_expire;
 
+      if(indigent){
+        indigent="1";
+      }else{
+        indigent="0";
+      }
+
 
         try {
     		var results = await pool.query("UPDATE Scholars SET title='"+title+"', sector='"+sector+"', level='"+level+"', euro='"+euro+"', origin='"+origin+"', duration='"+duration+"', age_from='"+age_from+"', age_until='"+age_until+"', indigent='"+indigent+"', comment='"+comment+"', date_expire='"+date_expire+"'  WHERE id='"+scholarID+"'")
