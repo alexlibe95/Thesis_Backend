@@ -29,8 +29,6 @@ var transporter = nodemailer.createTransport({
   }
 });
 
-
-
 const pool  = mariadb.createPool({
   host : '83.212.98.13',
   user : 'alex',
