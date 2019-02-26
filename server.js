@@ -24,15 +24,15 @@ app.use(function(req, res, next){
 var transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'alexlibe95@gmail.com',
-    pass: ''
+    user: '***@gmail.com',
+    pass: '***'
   }
 });
 
 const pool  = mariadb.createPool({
-  host : '83.212.98.13',
-  user : 'alex',
-  password : 'uDWHxaEQ12',
+  host : '***',
+  user : '***',
+  password : '***',
   database : 'ScholarshipsDB',
   connectionLimit: 5
 });
@@ -341,7 +341,7 @@ app.post('/sendEmail', async function(request, response, next) {
       console.log(username + email + subject +text)
 
       var mailOptions = {
-        to: 'alexlibe@studyingreece.edu.gr',
+        to: '***@***.gr',
         subject: email +"/"+subject,
         text: text
       };
