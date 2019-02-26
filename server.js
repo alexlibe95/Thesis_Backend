@@ -4,9 +4,7 @@ const app = express();
 const cors = require('cors');
 const mariadb = require('mariadb');
 const bodyParser = require('body-parser');
-const basicAuth = require('_helpers/basic-auth');
 const errorHandler = require('_helpers/error-handler');
-
 var nodemailer = require('nodemailer');
 
 app.use(bodyParser.json());
@@ -19,7 +17,6 @@ app.use(function(req, res, next){
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   next();
 })
-
 
 var transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -37,34 +34,29 @@ const pool  = mariadb.createPool({
   connectionLimit: 5
 });
 
-
-
-
 app.post('/auth', async function(request, response, next) {
 
   	var username = request.body.username;
   	var passwordHash = request.body.passwordHash;
-  	if (username && passwordHash) {
 
+  	if (username && passwordHash) {
       try {
   		var results = await pool.query("SELECT * FROM users where username='"+username+"' and password='"+passwordHash+"'")
   			if (results.length > 0) {
-          if(results[0].Activated){
-          const { passwordHash, ...userWithoutPassword } = results[0];
-  				response.json(userWithoutPassword);
-        }else{
-          response.status(400).json({ message: 'Your profile has not been Activated yet!' })
-        }
+          if (results[0].Activated) {
+            const { passwordHash, ...userWithoutPassword } = results[0];
+    				response.json(userWithoutPassword);
+          } else {
+            response.status(400).json({ message: 'Your profile has not been Activated yet!' })
+          }
   			} else {
   				response.status(400).json({ message: 'Username or password is incorrect' })
   			}
   			response.end();
-
     } catch(err) {
         throw new Error(err)
-    }
+      }
   	} else {
-
       response.status(400).json({ message: 'Please enter Username and Password!' })
   		response.end();
   	}
@@ -75,7 +67,6 @@ app.post('/salt', async function(request, response, next) {
   	var username = request.body.username;
 
   	if (username ) {
-
       try {
   		var results = await pool.query("SELECT salt FROM users where username='"+username+"'")
   			if (results.length > 0) {
@@ -84,17 +75,13 @@ app.post('/salt', async function(request, response, next) {
   				response.status(400).json({ message: 'Invalid Username' })
   			}
   			response.end();
-
     } catch(err) {
         throw new Error(err)
-    }
+      }
   	} else {
-
       response.status(400).json({ message: 'Something went wrong' })
   		response.end();
   	}
-
-
 });
 
 app.post('/changepass', async function(request, response, next) {
@@ -105,7 +92,6 @@ app.post('/changepass', async function(request, response, next) {
 
 
   	if (username && passwordHash && salt) {
-
       try {
   		var results = await pool.query("UPDATE users SET password='"+passwordHash+"', salt='"+salt+"'WHERE username='"+username+"'")
   			if (results.affectedRows > 0) {
@@ -114,78 +100,67 @@ app.post('/changepass', async function(request, response, next) {
   				response.status(400).json({ message: 'Could not update Password' })
   			}
   			response.end();
-
     } catch(err) {
         throw new Error(err)
-    }
+      }
   	} else {
-
       response.status(400).json({ message: 'Something went wrong' })
   		response.end();
   	}
-
-
 });
 
 app.post('/register', async function(request, response, next) {
 
-    var instName = request.body.instName;
-    var instLink = "https://"+request.body.instLink;
-    var firstName = request.body.firstName;
-    var lastName = request.body.lastName;
-  	var username = request.body.username;
-  	var passwordHash = request.body.passwordHash;
-    var salt = request.body.salt;
+      var instName = request.body.instName;
+      var instLink = "https://"+request.body.instLink;
+      var firstName = request.body.firstName;
+      var lastName = request.body.lastName;
+    	var username = request.body.username;
+    	var passwordHash = request.body.passwordHash;
+      var salt = request.body.salt;
 
 
-  	if ( instName && instLink && firstName && lastName && username && passwordHash && salt) {
+    	if ( instName && instLink && firstName && lastName && username && passwordHash && salt) {
+          try{
+        		var results = await pool.query("SELECT * FROM users where username='"+username+"'")
+        			if (results.length > 0) {
+                response.status(400).json({ message: 'This Username has already account' })
+        			} else {
+                  try {
+                  var results = await pool.query("INSERT INTO users (username, password, firstName, lastName, instName, instLink, salt) VALUES ('"+username+"','"+passwordHash+"','"+firstName+"','"+lastName+"','"+instName+"','"+instLink+"','"+salt+"')")
+                    if (results.affectedRows > 0) {
+                      response.status(201).json({ message: 'Successful registration' })
 
-        try{
-      		var results = await pool.query("SELECT * FROM users where username='"+username+"'")
-      			if (results.length > 0) {
-              response.status(400).json({ message: 'This Username has already account' })
-      			} else {
-                try {
-                var results = await pool.query("INSERT INTO users (username, password, firstName, lastName, instName, instLink, salt) VALUES ('"+username+"','"+passwordHash+"','"+firstName+"','"+lastName+"','"+instName+"','"+instLink+"','"+salt+"')")
-                  if (results.affectedRows > 0) {
-                    response.status(201).json({ message: 'Successful registration' })
+                      var mailOptions = {
+                        to: 'alexlibe@studyingreece.edu.gr',
+                        subject: 'New Registration',
+                        text: instName
+                      };
 
-                    var mailOptions = {
+                      transporter.sendMail(mailOptions, function(error, info){
+                            if (error) {
+                              console.log(error);
+                            } else {
+                              console.log('Email sent: ' + info.response);
+                            }
+                          });
 
-                      to: 'alexlibe@studyingreece.edu.gr',
-                      subject: 'New Registration',
-                      text: instName
-                    };
-
-                    transporter.sendMail(mailOptions, function(error, info){
-                          if (error) {
-                            console.log(error);
-                          } else {
-                            console.log('Email sent: ' + info.response);
-                          }
-                        });
-                  } else {
-                    response.status(400).json({ message: 'Username or password is incorrect' })
-                  }
-                  response.end();
-
-                } catch(err) {
-                  throw new Error(err)
+                    } else {
+                      response.status(400).json({ message: 'Username or password is incorrect' })
+                    }
+                    response.end();
+                  } catch(err) {
+                    throw new Error(err)
+                    }
                 }
-
-      			}
-      			response.end();
-
-        }catch(err) {
-            throw new Error(err)
-        }
-
-
-  	} else {
-
-      response.status(400).json({ message: 'Please fill the form!' })
-  		response.end();
-  	}
+        			  response.end();
+            } catch(err) {
+              throw new Error(err)
+              }
+        } else {
+        response.status(400).json({ message: 'Please fill the form!' })
+    		response.end();
+    	}
 });
 
 app.post('/getProfScholars', async function(request, response, next) {
@@ -193,26 +168,21 @@ app.post('/getProfScholars', async function(request, response, next) {
   	var username = request.body.username;
 
   	if (username ) {
-
       try {
-  		var results = await pool.query("SELECT * FROM Scholars where username='"+username+"'")
-  			if (results.length > 0) {
+    		var results = await pool.query("SELECT * FROM Scholars where username='"+username+"'")
+    		if (results.length > 0) {
           response.send(results);
-  			} else {
-  				response.status(400).json({ message: 'No Scholars' })
-  			}
-  			response.end();
-
-    } catch(err) {
+    		} else {
+    			response.status(400).json({ message: 'No Scholars' })
+    		}
+    		response.end();
+      } catch(err) {
         throw new Error(err)
-    }
+      }
   	} else {
-
       response.status(400).json({ message: 'Something went wrong' })
   		response.end();
   	}
-
-
 });
 
 app.post('/addScholar', async function(request, response, next) {
@@ -238,8 +208,7 @@ app.post('/addScholar', async function(request, response, next) {
       }else{
         indigent="0";
       }
-
-        try {
+      try {
     		var results = await pool.query("INSERT INTO Scholars (title, sector, level, euro, origin, duration, age_from, age_until, indigent, comment, date_expire, link, username) VALUES ('"+title+"','"+sector+"','"+level+"','"+euro+"','"+origin+"','"+duration+"','"+age_from+"','"+age_until+"','"+indigent+"','"+comment+"','"+date_expire+"','"+link+"','"+username+"')")
     			if (results.affectedRows > 0) {
             response.status(201).json({ message: 'successful' })
@@ -247,11 +216,9 @@ app.post('/addScholar', async function(request, response, next) {
     				response.status(400).json({ message: 'unsuccessful' })
     			}
     			response.end();
-
-        } catch(err) {
-            throw new Error(err)
-        }
-
+      } catch(err) {
+          throw new Error(err)
+      }
 });
 
 app.post('/editScholar', async function(request, response, next) {
@@ -274,9 +241,7 @@ app.post('/editScholar', async function(request, response, next) {
       }else{
         indigent="0";
       }
-
-
-        try {
+      try {
     		var results = await pool.query("UPDATE Scholars SET title='"+title+"', sector='"+sector+"', level='"+level+"', euro='"+euro+"', origin='"+origin+"', duration='"+duration+"', age_from='"+age_from+"', age_until='"+age_until+"', indigent='"+indigent+"', comment='"+comment+"', date_expire='"+date_expire+"'  WHERE id='"+scholarID+"'")
 
     			if (results.affectedRows > 0) {
@@ -294,22 +259,19 @@ app.post('/editScholar', async function(request, response, next) {
 
 app.post('/removeScholar', async function(request, response, next) {
 
-        var scholarID = request.body.ScholarID;
+      var scholarID = request.body.ScholarID;
 
-
-        try {
-    		var results = await pool.query("DELETE FROM Scholars WHERE id='"+scholarID+"'")
-    			if (results.affectedRows > 0) {
-            response.status(201).json({ message: 'successful' })
-    			} else {
-    				response.status(400).json({ message: 'unsuccessful' })
-    			}
-    			response.end();
-
-        } catch(err) {
-            throw new Error(err)
-        }
-
+      try {
+      		var results = await pool.query("DELETE FROM Scholars WHERE id='"+scholarID+"'")
+      		if (results.affectedRows > 0) {
+             response.status(201).json({ message: 'successful' })
+      		} else {
+      			 response.status(400).json({ message: 'unsuccessful' })
+      		}
+      	  response.end();
+      } catch(err) {
+          throw new Error(err)
+      }
 });
 
 app.post('/newsletter', async function(request, response, next) {
@@ -318,18 +280,16 @@ app.post('/newsletter', async function(request, response, next) {
       var email = request.body.email;
 
         try {
-    		var results = await pool.query("INSERT INTO Newsletter (name, email) VALUES ('"+username+"','"+email+"')")
-    			if (results.affectedRows > 0) {
-            response.status(201).json({ message: 'successful' })
-    			} else {
-    				response.status(400).json({ message: 'unsuccessful' })
-    			}
-    			response.end();
-
+    		    var results = await pool.query("INSERT INTO Newsletter (name, email) VALUES ('"+username+"','"+email+"')")
+    			  if (results.affectedRows > 0) {
+              response.status(201).json({ message: 'successful' })
+    			  } else {
+    				  response.status(400).json({ message: 'unsuccessful' })
+    			  }
+    			  response.end();
         } catch(err) {
             throw new Error(err)
-        }
-
+          }
 });
 
 app.post('/sendEmail', async function(request, response, next) {
@@ -338,8 +298,6 @@ app.post('/sendEmail', async function(request, response, next) {
       var email = request.body.email;
       var subject = request.body.subject;
       var text = request.body.text;
-      console.log(username + email + subject +text)
-
       var mailOptions = {
         to: '***@***.gr',
         subject: email +"/"+subject,
@@ -347,63 +305,52 @@ app.post('/sendEmail', async function(request, response, next) {
       };
 
       transporter.sendMail(mailOptions, function(error, info){
-            if (error) {
-              console.log(error);
-              response.status(400).json({ message: 'unsuccessful' })
-            } else {
-              console.log('Email sent: ' + info.response);
-              response.status(201).json({ message: 'successful' })
-            }
-          });
-
+          if (error) {
+            console.log(error);
+            response.status(400).json({ message: 'unsuccessful' })
+          } else {
+            console.log('Email sent: ' + info.response);
+            response.status(201).json({ message: 'successful' })
+          }
+      });
 });
-// use basic HTTP auth to secure the api
-//app.use(basicAuth);
-
-// api routes
-app.use('/users', require('./users/users.controller'));
-
-// global error handler
-app.use(errorHandler);
 
 app.use('/getInstitutes', function(req, res, next) {
-  let conn;
-  pool.getConnection()
-  .then(conn =>{
-    conn.query('SELECT instName, instLink from users WHERE Activated="1"')
-    .then((rows)=>{
-      res.send(rows);
-    })
-    .then((res)=>{
-      conn.end();
-    })
-    .catch(err=>{
-      conn.end();
-    })
-  })
-  .catch(err=>{
-
-  });
+      let conn;
+      pool.getConnection()
+      .then(conn =>{
+        conn.query('SELECT instName, instLink from users WHERE Activated="1"')
+        .then((rows)=>{
+          res.send(rows);
+        })
+        .then((res)=>{
+          conn.end();
+        })
+        .catch(err=>{
+          conn.end();
+        })
+      })
+      .catch(err=>{
+      });
 });
 
 app.use('/getAllScholars', function(req, res, next) {
-  let conn;
-  pool.getConnection()
-  .then(conn =>{
-    conn.query("SELECT * from Scholars")
-    .then((rows)=>{
-      res.send(rows);
-    })
-    .then((res)=>{
-      conn.end();
-    })
-    .catch(err=>{
-      conn.end();
-    })
-  })
-  .catch(err=>{
-
-  });
+      let conn;
+      pool.getConnection()
+      .then(conn =>{
+        conn.query("SELECT * from Scholars")
+        .then((rows)=>{
+          res.send(rows);
+        })
+        .then((res)=>{
+          conn.end();
+        })
+        .catch(err=>{
+          conn.end();
+        })
+      })
+      .catch(err=>{
+      });
 });
 
 app.post('/getScholars', async function(request, response, next) {
@@ -475,7 +422,6 @@ app.post('/getScholars', async function(request, response, next) {
     }
 
   	if (sector) {
-
       try {
   		var results = await pool.query(expression)
   			if (results.length > 0) {
@@ -486,15 +432,15 @@ app.post('/getScholars', async function(request, response, next) {
   			response.end();
     } catch(err) {
         throw new Error(err)
-    }
+      }
   	} else {
       response.status(400).json({ message: 'Something went wrong' })
   		response.end();
   	}
-
-
 });
 
+// global error handler
+app.use(errorHandler);
 
 // start server
 const port = process.env.NODE_ENV === 'production' ? 80 : 4000;
